@@ -1,0 +1,265 @@
+import { useMemo, useState } from 'react';
+
+const presets = [
+  'Ciné',
+  'Commercial',
+  'Médical',
+  'Mode',
+  'Gaming',
+  'Luxury',
+  'Startup',
+];
+
+const aspectOptions = ['16:9', '9:16', '1:1', '4:5'];
+
+function hashString(value) {
+  return Array.from(value).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+}
+
+function generatePosterSvg(prompt, style, aspect) {
+  const baseSeed = hashString(`${prompt}-${style}-${aspect}`);
+  const colors = [
+    ['#7c3aed', '#312e81'],
+    ['#ec4899', '#7c2d12'],
+    ['#22c55e', '#14532d'],
+    ['#f59e0b', '#78350f'],
+    ['#38bdf8', '#0f172a'],
+  ];
+  const [colorA, colorB] = colors[baseSeed % colors.length];
+
+  const title = prompt.length > 32 ? `${prompt.slice(0, 28)}...` : prompt;
+  const words = title.split(' ');
+  const primaryLine = words.slice(0, 3).join(' ');
+  const secondaryLine = words.slice(3, 6).join(' ') || 'AI Studio';
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+      <defs>
+        <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
+          <stop offset="0%" stop-color="${colorA}"/>
+          <stop offset="100%" stop-color="${colorB}"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="50%" cy="30%" r="60%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.85)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="675" fill="url(#bg)"/>
+      <circle cx="980" cy="120" r="220" fill="url(#glow)" opacity="0.45"/>
+      <circle cx="260" cy="540" r="190" fill="rgba(255,255,255,0.12)"/>
+      <rect x="118" y="126" width="270" height="48" rx="24" fill="rgba(255,255,255,0.12)"/>
+      <text x="150" y="157" fill="white" font-size="24" font-family="Arial, sans-serif" font-weight="700">ULRICH AI</text>
+      <text x="118" y="270" fill="white" font-size="62" font-family="Arial, sans-serif" font-weight="900">${primaryLine}</text>
+      <text x="118" y="340" fill="rgba(255,255,255,0.88)" font-size="56" font-family="Arial, sans-serif" font-weight="700">${secondaryLine}</text>
+      <text x="118" y="390" fill="rgba(255,255,255,0.82)" font-size="30" font-family="Arial, sans-serif">${style} • ${aspect} • AI video</text>
+      <rect x="118" y="440" width="240" height="64" rx="32" fill="rgba(255,255,255,0.18)"/>
+      <text x="170" y="480" fill="white" font-size="26" font-family="Arial, sans-serif" font-weight="700">Créer maintenant</text>
+      <g opacity="0.8">
+        <circle cx="950" cy="530" r="95" fill="rgba(255,255,255,0.12)"/>
+        <circle cx="950" cy="530" r="58" fill="rgba(255,255,255,0.21)"/>
+        <path d="M935 495 L980 530 L935 565Z" fill="white"/>
+      </g>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
+function buildStoryboard(prompt, style, duration) {
+  return [
+    {
+      title: 'Intro',
+      text: `${prompt.slice(0, 28)}...`,
+      accent: '#8b5cf6',
+      duration: Math.max(2, Math.round(duration / 3)),
+    },
+    {
+      title: 'Impact',
+      text: `${style} visual boost`,
+      accent: '#f97316',
+      duration: Math.max(2, Math.round(duration / 3)),
+    },
+    {
+      title: 'CTA',
+      text: 'Appel à l’action + conversion',
+      accent: '#22c55e',
+      duration: Math.max(2, Math.round(duration / 3)),
+    },
+  ];
+}
+
+export default function App() {
+  const [prompt, setPrompt] = useState('Produit premium pour les réseaux sociaux');
+  const [style, setStyle] = useState('Ciné');
+  const [aspect, setAspect] = useState('9:16');
+  const [duration, setDuration] = useState(15);
+  const [platform, setPlatform] = useState('TikTok');
+  const [loading, setLoading] = useState(false);
+  const [posterUrl, setPosterUrl] = useState('');
+  const [storyboard, setStoryboard] = useState([]);
+  const [metrics, setMetrics] = useState({ quality: 96, speed: 1.8, views: 184000 });
+
+  const generatedTitle = useMemo(() => {
+    if (!prompt.trim()) return 'Nouvelle création';
+    return prompt.trim();
+  }, [prompt]);
+
+  const handleGenerate = () => {
+    if (!prompt.trim()) return;
+
+    setLoading(true);
+
+    setTimeout(() => {
+      const nextPoster = generatePosterSvg(prompt, style, aspect);
+      const nextStoryboard = buildStoryboard(prompt, style, duration);
+
+      setPosterUrl(nextPoster);
+      setStoryboard(nextStoryboard);
+      setMetrics({
+        quality: 92 + Math.round(Math.random() * 7),
+        speed: Number((1.1 + Math.random() * 2.2).toFixed(1)),
+        views: Math.round(120000 + Math.random() * 280000),
+      });
+      setLoading(false);
+    }, 900);
+  };
+
+  return (
+    <div className="shell">
+      <aside className="panel panel-left">
+        <div className="brand-row">
+          <div className="brand-mark">U</div>
+          <div>
+            <p className="eyebrow">Creative suite</p>
+            <h1>ULRICH AI Studio</h1>
+          </div>
+        </div>
+
+        <label className="field">
+          <span>Prompt principal</span>
+          <textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={5}
+            placeholder="Décrire la campagne, le produit ou le concept"
+          />
+        </label>
+
+        <div className="grid-2">
+          <label className="field">
+            <span>Style</span>
+            <select value={style} onChange={(e) => setStyle(e.target.value)}>
+              {presets.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Plateforme</span>
+            <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
+              <option>TikTok</option>
+              <option>Instagram Reels</option>
+              <option>YouTube Shorts</option>
+              <option>Meta Ads</option>
+            </select>
+          </label>
+        </div>
+
+        <div className="grid-2">
+          <label className="field">
+            <span>Aspect</span>
+            <select value={aspect} onChange={(e) => setAspect(e.target.value)}>
+              {aspectOptions.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="field">
+            <span>Durée</span>
+            <input
+              type="range"
+              min="5"
+              max="45"
+              step="5"
+              value={duration}
+              onChange={(e) => setDuration(Number(e.target.value))}
+            />
+            <small>{duration}s</small>
+          </label>
+        </div>
+
+        <button className="primary-btn" onClick={handleGenerate} disabled={loading}>
+          {loading ? 'Génération en cours...' : 'Générer l’affiche et la vidéo'}
+        </button>
+      </aside>
+
+      <main className="panel panel-right">
+        <header className="topbar">
+          <div>
+            <p className="eyebrow">Campagne active</p>
+            <h2>{generatedTitle}</h2>
+          </div>
+          <div className="chip">{platform}</div>
+        </header>
+
+        <section className="metrics-grid">
+          <div className="metric-card">
+            <span>Qualité</span>
+            <strong>{metrics.quality}%</strong>
+          </div>
+          <div className="metric-card">
+            <span>Vitesse</span>
+            <strong>{metrics.speed}s</strong>
+          </div>
+          <div className="metric-card">
+            <span>Potentiel</span>
+            <strong>{Math.round(metrics.views / 1000)}k vues</strong>
+          </div>
+        </section>
+
+        <section className="preview-layout">
+          <div className="card preview-card">
+            <div className="card-head">
+              <span>Affiche</span>
+              <span>{aspect}</span>
+            </div>
+            {posterUrl ? (
+              <img src={posterUrl} alt="Affiche générée" className="poster-preview" />
+            ) : (
+              <div className="placeholder">Créer votre première affiche</div>
+            )}
+          </div>
+
+          <div className="card">
+            <div className="card-head">
+              <span>Storyboard vidéo</span>
+              <span>{duration}s</span>
+            </div>
+            <div className="story-grid">
+              {storyboard.length > 0 ? (
+                storyboard.map((scene, index) => (
+                  <div key={scene.title} className="scene-item" style={{ borderColor: scene.accent }}>
+                    <div className="scene-bullet" style={{ background: scene.accent }} />
+                    <div>
+                      <strong>{index + 1}. {scene.title}</strong>
+                      <p>{scene.text}</p>
+                    </div>
+                    <span>{scene.duration}s</span>
+                  </div>
+                ))
+              ) : (
+                <div className="placeholder slim">Le montage IA apparaîtra ici</div>
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
